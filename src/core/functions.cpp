@@ -1274,6 +1274,10 @@ bool StripEnclosingSingleQuotesFromString(wxString& string_to_strip) {
 
 //  The intel MKL is hobbled on AMD processors, the purpose of this section of code is to detect if we are running on an AMD processor that can
 //  use advanced features of the MKL, and if we are then to set a debug environment variable which significantly improves performance.
+//  The whole section is x86-only (CPUID / XGETBV / <cpuid.h>); on other architectures
+//  (e.g. aarch64) MKL does not exist and the check is a no-op.
+
+#if defined(__x86_64__) || defined(__i386__)
 
 #if defined(__INTEL_COMPILER) && (__INTEL_COMPILER >= 1300)
 #include <immintrin.h>
@@ -1368,9 +1372,11 @@ static int can_use_intel_core_4th_gen_features( ) {
 
 #include <cpuid.h>
 
+#endif /* x86 only */
+
 void ActivateMKLDebugForNonIntelCPU( ) // this sets an environment variable that should speed up recent AMD cpus when using MKL significantly
 {
-#ifdef MKL // Only do something if using MKL..
+#if defined(MKL) && (defined(__x86_64__) || defined(__i386__)) // Only do something if using MKL on x86..
 
     // Get the vendor string, as if it has INTEL in it, we won't do anything..
 
